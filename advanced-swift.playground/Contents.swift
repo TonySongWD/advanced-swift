@@ -266,4 +266,53 @@ for prefix in PrefixSequence(string: "Hello") {
     print(prefix)
 }
 
+let seq = stride(from: 0, to: 10, by: 1)
+
+//基于函数的迭代器和序列
+/*“通过一个返回 AnyIterator 的函数来定义斐波纳契迭代器” - 不具有值语义*/
+func fibsIterator() -> AnyIterator<Int> {
+    var state = (0, 1)
+    return AnyIterator{
+        let upcomingNumber = state.0
+        state = (state.1, state.0 + state.1)
+        return upcomingNumber
+    }
+}
+let fibsSequence = AnySequence(fibsIterator)
+Array(fibsSequence.prefix(10)) // [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+
+/*通过一个 Sequence 函数来定义斐波纳契迭代器” - 具有值语义，和自定义生成序列完全一样语义*/
+let fibsSequence2 = sequence(state: (0, 1)) {
+    // 在这里编译器需要一些类型推断的协助
+    (state: inout (Int, Int)) -> Int? in
+    let upcomingNumber = state.0
+    state = (state.1, state.0 + state.1)
+    return upcomingNumber
+}
+Array(fibsSequence2.prefix(10)) // [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+
+// 自定义集合类型 - 队列
+/// 一个能够将元素入队和出队的类型
+protocol Queue {
+    /// 在 `self` 中所持有的元素的类型
+    associatedtype Element
+    /// 将 `newElement` 入队到 `self`
+    mutating func enqueue(_ newElement: Element)
+    /// 从 `self` 出队一个元素
+    mutating func dequeue() -> Element?
+}
+// “上面协议中方法前的注释非常重要，它和实际的方法名及类型名一样，也是协议的一部分，这些注释用来保证协议应有的行为。”
+
+extension Substring {
+    var newWordRange: Range<Index> {
+        let start = drop(while: {$0 == " "})
+        let end = start.index(where: {$0 == " "}) ?? endIndex
+        return start.startIndex..<end
+    }
+}
+
+
+
+
+
 
